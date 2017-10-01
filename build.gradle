@@ -1,0 +1,153 @@
+group 'com.github.just-4-fun'
+//version '0.1'
+version '1.0-SNAPSHOT'
+
+buildscript {
+    ext.kotlin_version = '1.1.51'
+//    ext.serializationVersion = '0.1'
+
+    repositories {
+        mavenCentral()
+        jcenter()
+        maven { url "https://kotlin.bintray.com/kotlinx" }
+    }
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3'
+        classpath "org.jetbrains.dokka:dokka-gradle-plugin:0.9.15"
+//        classpath "org.jetbrains.kotlinx:kotlinx-gradle-serialization-plugin:$serializationVersion"
+    }
+}
+
+apply plugin: 'kotlin'
+apply plugin: 'org.jetbrains.dokka'
+//apply plugin: 'kotlinx-serialization'
+
+repositories {
+    mavenCentral()
+    jcenter()
+    maven { url "https://kotlin.bintray.com/kotlinx" }
+    maven { url "http://repository.jetbrains.com/all" }
+    mavenLocal()
+}
+
+dependencies {
+    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    compile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
+    testCompile "org.jetbrains.kotlin:kotlin-test:$kotlin_version"
+    testCompile 'org.jetbrains.spek:spek:0.1.195'
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+    compile "com.fasterxml.jackson.core:jackson-core:2.7.0"
+    compile "com.github.just-4-fun:kotlinkit:1.0-SNAPSHOT"
+//    compile "org.jetbrains.kotlinx:kotlinx-serialization-runtime:$serializationVersion"
+}
+
+compileKotlin { kotlinOptions.jvmTarget = "1.6" }
+compileTestKotlin { kotlinOptions.jvmTarget = "1.6" }
+
+dokka {
+    outputFormat = 'html'
+    outputDirectory = "$buildDir/javadoc"
+}
+
+/* PUBLISHING LOCAL: task: publish..Local */
+
+apply plugin: 'maven-publish'
+
+publishing {
+    publications {
+        mavenLocalProject(MavenPublication) {
+            from components.java
+            artifact sourcesJar {
+                classifier "sources"
+            }
+        }
+    }
+}
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+task javadocJar(type: Jar) {
+    classifier = 'javadoc'
+    from sourceSets.main.kotlin
+}
+
+/* PUBLISH TO JCENTER */
+
+apply plugin: 'com.jfrog.bintray'
+
+bintray {
+    user = System.getenv('BINTRAY_USER')
+    key = System.getenv('BINTRAY_KEY')
+    publications = ['theProject']
+//    publish = false//true Whether version should be auto published after an upload
+//    override = false //[Default: false] Whether to override version artifacts already published
+//    dryRun = false //[Default: false] Whether to run this as dry-run, without deploying
+    pkg {
+        repo = 'public'
+        name = 'holomorph'
+        userOrg = 'just-4-fun'
+        licenses = ['Apache-2.0']
+        vcsUrl = 'https://github.com/just-4-fun/holomorph.git'
+        websiteUrl = 'https://github.com/just-4-fun/holomorph'
+        githubRepo = 'holomorph'
+        version { name = project.version }
+//        labels = ['gear', 'gore', 'gorilla']
+//        publicDownloadNumbers = true
+        githubRepo = 'just-4-fun/holomorph' //Optional Github repository
+        githubReleaseNotesFile = 'README.md' //Optional Github readme file
+    }
+}
+
+// Maven pom configuration:
+def pomConfig = {
+    packaging 'jar'
+    name 'holomorph'
+    description 'Serialization library for Kotlin'
+    url 'ttps://github.com/just-4-fun/holomorph'
+    scm {
+        connection 'scm:git:git://github.com/just-4-fun/holomorph.git'
+        developerConnection 'scm:git:ssh://github.com/just-4-fun/holomorph.git'
+        url 'https://github.com/just-4-fun/holomorph/tree/master'
+    }
+    licenses {
+        license {
+            name 'The Apache License, Version 2.0'
+            url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+        }
+    }
+    developers {
+        developer {
+            name 'Markus.M'
+            email 'markus.marvell@gmail.com'
+            organization 'just4fun'
+            organizationUrl 'https://github.com/just-4-fun'
+        }
+    }
+}
+
+publishing {
+    publications {
+        theProject(MavenPublication) {
+            from components.java
+            artifact sourcesJar
+            artifact javadocJar
+            groupId project.group
+            artifactId 'holomorph'
+            version project.version
+            pom.withXml {
+                def root = asNode()
+                root.children().last() + pomConfig
+//                // Iterate over the compile dependencies (we don't want the test ones), adding a <dependency> node for each
+//                configurations.compile.allDependencies.each {
+//                    def dependencyNode = dependenciesNode.appendNode('dependency')
+//                    dependencyNode.appendNode('groupId', it.group)
+//                    dependencyNode.appendNode('artifactId', it.name)
+//                    dependencyNode.appendNode('version', it.version)
+//                }
+            }
+        }
+    }
+}
