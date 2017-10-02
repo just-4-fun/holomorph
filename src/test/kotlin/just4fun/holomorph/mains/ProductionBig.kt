@@ -96,7 +96,7 @@ class ProductionBig: Spek() { init {
 		fun <O: Any, T: Any> test(on: On, obj: O, schema: SchemaType<O>, providerFactory: EntryProviderFactory<T>, consumerFactory: EntryConsumerFactory<T>, info: String) {
 			println("TEST::   Obj: ${obj::class.simpleName}  ;  Prod: ${providerFactory::class.simpleName};  Cons: ${consumerFactory::class.simpleName}")
 			val prod1 = schema.instanceTo(obj, consumerFactory).valueOrThrow
-			val obj1 = schema.instanceFrom(prod1, providerFactory).valueOrNull
+			val obj1 = schema.instanceFrom(prod1, providerFactory).value
 //			println("Obj1? ${obj1 != null};  Pro1\n$prod1")
 			on.it(info) {
 				if (obj1 == null) println("Obj1 is null")

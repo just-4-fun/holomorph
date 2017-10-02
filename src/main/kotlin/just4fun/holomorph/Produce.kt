@@ -14,7 +14,7 @@ class Produce: EntryBuilder, Entry, EnclosedEntries, ProduceContext {
 // TODO: schema guide for non-schema conversions: @ Produce(xml, json, schema)
 	companion object {
 		/** Creates a [Produce] instance and starts production.
-		 * @return [Result.Success] with an output [OUT] or [Result.Failure] with an exception.
+		 * @return [Result.Value] with an output [OUT] or [Result.Failure] with an failure.
 		 * [See the guide](https://just-4-fun.github.io/holomorph/#serialization-forms)
 		 */
 		operator fun <IN: Any, OUT: Any> invoke(provider: EntryProvider<IN>, consumer: EntryConsumer<OUT>): Result<OUT> {
